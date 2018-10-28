@@ -13,6 +13,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest;
 import com.amazonaws.services.securitytoken.model.GetCallerIdentityResult;
+import com.amazonaws.services.shield.model.AWSShieldException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.slf4j.Logger;
@@ -99,12 +100,7 @@ public class MainController {
         addTokenToModel(queryParameters, model);
 
         try {
-            Credentials creds = getCredentialsFromToken(queryParameters.get("id_token"));
-            AWSSessionCredentials sessionCredentials = new BasicSessionCredentials(
-                    creds.getAccessKeyId(),
-                    creds.getSecretKey(),
-                    creds.getSessionToken()
-            );
+            AWSSessionCredentials sessionCredentials = getSessionCredentialsFromToken(queryParameters.get("id_token"));
             AmazonS3 s3 = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)).build();
             GetCallerIdentityRequest request = new GetCallerIdentityRequest().withRequestCredentialsProvider(new AWSStaticCredentialsProvider(sessionCredentials));
             AWSSecurityTokenService client = AWSSecurityTokenServiceClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)).build();
@@ -117,6 +113,18 @@ public class MainController {
             e.printStackTrace();
         }
         return "s3";
+    }
+
+    public AWSSessionCredentials getSessionCredentialsFromToken(String token) {
+        return getSessionCredentialsFromCredentials(getCredentialsFromToken(token));
+    }
+
+    public AWSSessionCredentials getSessionCredentialsFromCredentials(Credentials creds) {
+        return new BasicSessionCredentials(
+                creds.getAccessKeyId(),
+                creds.getSecretKey(),
+                creds.getSessionToken()
+        );
     }
 
     public void addTokenToModel(Map<String, String> queryParameters, Model model) {
