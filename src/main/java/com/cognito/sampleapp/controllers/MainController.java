@@ -94,16 +94,9 @@ public class MainController {
 
     @GetMapping("/s3")
     public String s3Browser(@RequestParam Map<String, String> queryParameters, @RequestHeader Map<String, String> headers, Model model) {
-        LOGGER.debug("\n\nHeaders\n===============================================\n");
-        for (String header : headers.keySet())  {
-            LOGGER.debug(header + "=" + headers.get(header));
-        }
-        LOGGER.debug("\n\n");
-        LOGGER.debug("\n\nQuery Parameters\n===============================================\n");
-        for (String param : queryParameters.keySet()) {
-            LOGGER.debug(param + "=" + queryParameters.get(param));
-        }
-        LOGGER.debug("\n\n");
+        headerDebug(headers);
+        paramDebug(queryParameters);
+
         if (queryParameters.containsKey("access_token")) {
             DecodedJWT jwt = JWT.decode(queryParameters.get("access_token"));
             model.addAttribute("access_token_header", new String(Base64.getDecoder().decode(jwt.getHeader())));
@@ -167,5 +160,22 @@ public class MainController {
         String format = "https://%s.auth.%s.amazoncognito.com/oauth2/authorize?identity_provider=%s&redirect_uri=%s&response_type=TOKEN&client_id=%s&scope=openid";
         return String.format(format, customDomain, region, cognitoIDPName, URLEncoder.encode(loginUrl), clientAppId);
     }
+
+    public void headerDebug(Map<String, String> headers) {
+        LOGGER.debug("\n\nHeaders\n===============================================\n");
+        for (String header : headers.keySet())  {
+            LOGGER.debug(header + "=" + headers.get(header));
+        }
+        LOGGER.debug("\n\n");
+    }
+
+    public void paramDebug(Map<String, String> queryParameters) {
+        LOGGER.debug("\n\nQuery Parameters\n===============================================\n");
+        for (String param : queryParameters.keySet()) {
+            LOGGER.debug(param + "=" + queryParameters.get(param));
+        }
+        LOGGER.debug("\n\n");
+    }
+
 }
 
