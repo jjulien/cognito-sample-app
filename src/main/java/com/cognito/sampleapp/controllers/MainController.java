@@ -96,19 +96,8 @@ public class MainController {
     public String s3Browser(@RequestParam Map<String, String> queryParameters, @RequestHeader Map<String, String> headers, Model model) {
         headerDebug(headers);
         paramDebug(queryParameters);
+        addTokenToModel(queryParameters, model);
 
-        if (queryParameters.containsKey("access_token")) {
-            DecodedJWT jwt = JWT.decode(queryParameters.get("access_token"));
-            model.addAttribute("access_token_header", new String(Base64.getDecoder().decode(jwt.getHeader())));
-            model.addAttribute("access_token_payload", new String(Base64.getDecoder().decode(jwt.getPayload())));
-            model.addAttribute("access_token_signature", jwt.getSignature());
-        }
-        if (queryParameters.containsKey("id_token")) {
-            DecodedJWT jwt = JWT.decode(queryParameters.get("id_token"));
-            model.addAttribute("id_token_header", new String(Base64.getDecoder().decode(jwt.getHeader())));
-            model.addAttribute("id_token_payload", new String(Base64.getDecoder().decode(jwt.getPayload())));
-            model.addAttribute("id_token_signature", jwt.getSignature());
-        }
         try {
             Credentials creds = getCredentialsFromToken(queryParameters.get("id_token"));
             AWSSessionCredentials sessionCredentials = new BasicSessionCredentials(
@@ -128,6 +117,21 @@ public class MainController {
             e.printStackTrace();
         }
         return "s3";
+    }
+
+    public void addTokenToModel(Map<String, String> queryParameters, Model model) {
+        if (queryParameters.containsKey("access_token")) {
+            DecodedJWT jwt = JWT.decode(queryParameters.get("access_token"));
+            model.addAttribute("access_token_header", new String(Base64.getDecoder().decode(jwt.getHeader())));
+            model.addAttribute("access_token_payload", new String(Base64.getDecoder().decode(jwt.getPayload())));
+            model.addAttribute("access_token_signature", jwt.getSignature());
+        }
+        if (queryParameters.containsKey("id_token")) {
+            DecodedJWT jwt = JWT.decode(queryParameters.get("id_token"));
+            model.addAttribute("id_token_header", new String(Base64.getDecoder().decode(jwt.getHeader())));
+            model.addAttribute("id_token_payload", new String(Base64.getDecoder().decode(jwt.getPayload())));
+            model.addAttribute("id_token_signature", jwt.getSignature());
+        }
     }
 
     public Credentials getCredentialsFromToken(String token) {
