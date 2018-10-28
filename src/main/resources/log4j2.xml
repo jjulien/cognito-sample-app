@@ -9,8 +9,9 @@
         <Root level="WARN">
             <AppenderRef ref="ConsoleAppender"/>
         </Root>
-        <Logger name="com.amazonaws" level="DEBUG" />
+        <Logger name="com.amazonaws" level="INFO" />
         <Logger name="org.springframework.web" level="INFO"/>
+        <Logger name="com.cognito.sampleapp" level="DEBUG"/>
     </Loggers>
     <Include resource="org/springframework/boot/logging/logback/base.xml"/>
 </Configuration>

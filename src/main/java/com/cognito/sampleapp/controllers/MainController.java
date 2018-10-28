@@ -15,6 +15,8 @@ import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest;
 import com.amazonaws.services.securitytoken.model.GetCallerIdentityResult;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
@@ -60,6 +62,8 @@ public class MainController {
     @Value("${ASSUME_ROLE_ARN}")
     private String assumeRoleArn;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MainController.class);
+
     @GetMapping("/")
     public ModelAndView index(Model model) {
         return new ModelAndView("redirect:/login");
@@ -68,9 +72,9 @@ public class MainController {
     @GetMapping("/login")
     public String login(@RequestParam Map<String, String> queryParameters, HttpServletRequest request, Model model) {
         model.addAttribute("loginurl", getLoginUrl());
-        System.out.println("Doing GET /login with URI " + request.getRequestURI() + " and URL " + request.getRequestURL());
+        LOGGER.debug("Doing GET /login with URI " + request.getRequestURI() + " and URL " + request.getRequestURL());
         for (String key : queryParameters.keySet()) {
-            System.out.println(key + ": " + queryParameters.get(key));
+            LOGGER.debug(key + ": " + queryParameters.get(key));
         }
         if ( queryParameters.containsKey("error_description") ) {
             model.addAttribute("error", true);
@@ -90,14 +94,16 @@ public class MainController {
 
     @GetMapping("/s3")
     public String s3Browser(@RequestParam Map<String, String> queryParameters, @RequestHeader Map<String, String> headers, Model model) {
-        System.out.println("Headers\n===============================================\n");
+        LOGGER.debug("\n\nHeaders\n===============================================\n");
         for (String header : headers.keySet())  {
-            System.out.println(header + "=" + headers.get(header));
+            LOGGER.debug(header + "=" + headers.get(header));
         }
-        System.out.println("\n\nQuery Parameters\n===============================================\n");
+        LOGGER.debug("\n\n");
+        LOGGER.debug("\n\nQuery Parameters\n===============================================\n");
         for (String param : queryParameters.keySet()) {
-            System.out.println(param + "=" + queryParameters.get(param));
+            LOGGER.debug(param + "=" + queryParameters.get(param));
         }
+        LOGGER.debug("\n\n");
         if (queryParameters.containsKey("access_token")) {
             DecodedJWT jwt = JWT.decode(queryParameters.get("access_token"));
             model.addAttribute("access_token_header", new String(Base64.getDecoder().decode(jwt.getHeader())));
@@ -121,13 +127,9 @@ public class MainController {
             GetCallerIdentityRequest request = new GetCallerIdentityRequest().withRequestCredentialsProvider(new AWSStaticCredentialsProvider(sessionCredentials));
             AWSSecurityTokenService client = AWSSecurityTokenServiceClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)).build();
             GetCallerIdentityResult result = client.getCallerIdentity(request);
-            System.out.println("Identity: " + result.getArn());
+            LOGGER.debug("Identity: " + result.getArn());
 
             List<Bucket> buckets = s3.listBuckets();
-            System.out.println("Buckets");
-            for(int i=0;i<buckets.size();i++) {
-                System.out.println("  " + buckets.get(i).getName());
-            }
             model.addAttribute("all_buckets", buckets);
         } catch (Exception e) {
             e.printStackTrace();
@@ -146,7 +148,7 @@ public class MainController {
                 .withLogins(logins);
 
         GetIdResult result = cognitoIdentityClient.getId(request);
-        System.out.println("ID: " + result.getIdentityId());
+        LOGGER.debug("ID: " + result.getIdentityId());
 
         GetCredentialsForIdentityRequest getCredentialsRequest =
                 new GetCredentialsForIdentityRequest()
