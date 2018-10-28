@@ -102,11 +102,7 @@ public class MainController {
         try {
             AWSSessionCredentials sessionCredentials = getSessionCredentialsFromToken(queryParameters.get("id_token"));
             AmazonS3 s3 = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)).build();
-            GetCallerIdentityRequest request = new GetCallerIdentityRequest().withRequestCredentialsProvider(new AWSStaticCredentialsProvider(sessionCredentials));
-            AWSSecurityTokenService client = AWSSecurityTokenServiceClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)).build();
-            GetCallerIdentityResult result = client.getCallerIdentity(request);
-            LOGGER.debug("Identity: " + result.getArn());
-
+            sessionCredentialRoleARNDebug(sessionCredentials);
             List<Bucket> buckets = s3.listBuckets();
             model.addAttribute("all_buckets", buckets);
         } catch (Exception e) {
@@ -187,6 +183,13 @@ public class MainController {
             LOGGER.debug(param + "=" + queryParameters.get(param));
         }
         LOGGER.debug("\n\n");
+    }
+
+    public void sessionCredentialRoleARNDebug(AWSSessionCredentials sessionCredentials) {
+        GetCallerIdentityRequest request = new GetCallerIdentityRequest().withRequestCredentialsProvider(new AWSStaticCredentialsProvider(sessionCredentials));
+        AWSSecurityTokenService client = AWSSecurityTokenServiceClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)).build();
+        GetCallerIdentityResult result = client.getCallerIdentity(request);
+        LOGGER.debug("Identity: " + result.getArn());
     }
 
 }
